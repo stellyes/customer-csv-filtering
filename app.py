@@ -32,7 +32,12 @@ if uploaded_file is not None:
         st.session_state.original_df = df
         
         # Validate required columns
-        required_cols = ['First Name', 'Last Name', 'Customer Drivers License']
+        required_cols = ['First Name', 'Last Name', 'Customer Drivers License', 'Customer ID', 
+                        'Gender', 'Date of Birth', 'Email', 'Opted In', 'Phone', 
+                        'Street Address', 'City', 'State', 'Zip Code', 
+                        'Reward Points ($) Balance', 'Customer Source',
+                        'Customer Drivers License Expiration Date', 'Medical Id',
+                        'Customer Medical Id Expiration Date', 'Customer Profile Notes', 'Banned']
         missing_cols = [col for col in required_cols if col not in df.columns]
         
         if missing_cols:
@@ -70,8 +75,64 @@ if uploaded_file is not None:
                     filtered_df = df[mask].copy()
                     excluded_df = df[~mask].copy()
                     
+                    # Format filtered data with new column structure
+                    formatted_df = pd.DataFrame()
+                    formatted_df['external ID'] = filtered_df['Customer ID']
+                    formatted_df['First Name'] = filtered_df['First Name']
+                    formatted_df['Last Name'] = filtered_df['Last Name']
+                    formatted_df['Gender'] = filtered_df['Gender']
+                    formatted_df['Date of Birth'] = filtered_df['Date of Birth']
+                    formatted_df['Email'] = filtered_df['Email']
+                    formatted_df['Email Opt-In'] = filtered_df['Opted In']
+                    formatted_df['Phone'] = filtered_df['Phone']
+                    formatted_df['SMS Opt-In'] = 'N'
+                    formatted_df['Push Opt-In'] = 'N'
+                    
+                    # Combine Street Address and City for Address column
+                    formatted_df['Address'] = filtered_df['Street Address'] + ', ' + filtered_df['City']
+                    
+                    formatted_df['State'] = filtered_df['State']
+                    formatted_df['Zip'] = filtered_df['Zip Code']
+                    formatted_df['Minimum Loyalty Level'] = 'None'
+                    
+                    # Format Point Balance as currency (remove $ if present, ensure numeric format)
+                    point_balance = filtered_df['Reward Points ($) Balance'].str.replace('$', '').str.replace(',', '')
+                    formatted_df['Point Balance'] = point_balance
+                    
+                    formatted_df['Referral Source'] = filtered_df['Customer Source']
+                    
+                    # Columns 17-30
+                    formatted_df['Created In Store'] = 'Y'
+                    formatted_df['Doctor'] = 'N/A'
+                    formatted_df['Doctor License'] = 'N/A'
+                    formatted_df['Primary Document Type'] = "Driver's License"
+                    formatted_df['Primary Document Number'] = filtered_df['Customer Drivers License']
+                    formatted_df['Expiration Date'] = filtered_df['Customer Drivers License Expiration Date']
+                    
+                    # Medical Document Type: "MMID" if Medical Id is not empty, else "None"
+                    formatted_df['Medical Document Type'] = filtered_df['Medical Id'].apply(
+                        lambda x: 'MMID' if x.strip() != '' else 'None'
+                    )
+                    
+                    # Medical Document Number: value from Medical Id, or "None" if empty
+                    formatted_df['Medical Document Number'] = filtered_df['Medical Id'].apply(
+                        lambda x: x if x.strip() != '' else 'None'
+                    )
+                    
+                    formatted_df['Medical Document Expiration Date'] = filtered_df['Customer Medical Id Expiration Date']
+                    formatted_df['Medical Document Renewal Rate'] = ''
+                    formatted_df['Medical Document Issue Date'] = ''
+                    formatted_df['Image URL'] = ''
+                    
+                    # Notes: up to 500 characters from Customer Profile Notes
+                    formatted_df['Notes'] = filtered_df['Customer Profile Notes'].apply(
+                        lambda x: x[:500] if len(x) > 500 else x
+                    )
+                    
+                    formatted_df['Banned'] = filtered_df['Banned']
+                    
                     # Store in session state
-                    st.session_state.filtered_df = filtered_df
+                    st.session_state.filtered_df = formatted_df
                     st.session_state.excluded_df = excluded_df
                     
                     st.rerun()
