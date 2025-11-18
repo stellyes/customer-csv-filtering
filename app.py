@@ -56,13 +56,13 @@ if uploaded_file is not None:
                     # Apply filters
                     mask = (
                         ~df["First Name"].str.contains(
-                            "canceled|cancelled|test|testing", 
+                            "canceled|cancelled|test|testing|customer", 
                             case=False, 
                             na=False,
                             regex=True
                         ) &
                         ~df["Last Name"].str.contains(
-                            "canceled|cancelled|test|testing", 
+                            "canceled|cancelled|test|testing|customer", 
                             case=False, 
                             na=False,
                             regex=True
@@ -205,7 +205,7 @@ if st.session_state.filtered_df is not None:
 st.markdown("---")
 st.markdown("### 📋 Filter Criteria")
 st.info("""
-- Removes rows with "Canceled", "Cancelled", "Test", or "Testing" in First/Last Name
+- Removes rows with "Canceled", "Cancelled", "Test", "Testing", or "Customer" in First/Last Name
 - Removes rows with "N/A" or empty Customer Drivers License
 - Case-insensitive matching for all text filters
 """)
